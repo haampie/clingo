@@ -9,7 +9,7 @@ $clingo \
     --configuration=tweety \
     --opt-strategy=usc,2 \
     --opt-heuristic=model \
-    --del-max=1000000 \
+    --del-max=750000 \
     --del-glue=5,0 \
     --otfs=2 \
     --heuristic=Domain \
