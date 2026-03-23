@@ -1,7 +1,7 @@
 # Experiment Log
 
-## Current best: ~18.25s (with variance 18.2-18.4s)
-Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del-max=750000 --trans-ext=no --backprop --nant --sign-def=neg --del-glue=5,0 --otfs=2 --heuristic=Domain`
+## Current best: ~18.05s (range 17.99-18.15s)
+Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del-max=750000 --trans-ext=no --backprop --nant --sign-def=neg --del-glue=5,0 --otfs=2 --score-res=multiset --heuristic=Domain`
 
 ## Problem characteristics
 - Total time: ~19.686s baseline
@@ -116,3 +116,17 @@ Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del
 | 103 | `--del-max=700000` | 18.337 | -0.08s... wait wrong direction | **committed** — actually 18.337 < 18.245?... re-check |
 | 103 | `--del-max=700000` | 18.337 | — | within timing variance of 750k, reverted bad commit |
 | 104 | `--del-cfl=no` (disable conflict-based deletion) | 18.333-18.379 | ~ | within timing variance (~18.2-18.4s for baseline too) |
+| 105 | `--del-cfl=+,1000,50,10` | 18.364 | ~ | within timing variance |
+| 106 | `--vsids-acids` (ACIDS scheme) | 19.465 | +1.23s | much worse |
+| 107 | `--score-res=set` | 18.347 | ~ | within timing variance |
+| 108 | `--score-res=multiset` | 18.141-18.146 | -0.10s ✓ | **committed** new best ~18.14s — solving time dropped 3.72→3.48s |
+| 109 | `--score-res=min` | 18.313 | +0.17s | worse than multiset |
+| 110 | `--score-other=loop` | 18.016-18.140 | ~ | within variance (committed baseline also 17.99-18.08s now with score-res=multiset) |
+
+## Next ideas (remaining)
+
+- `--score-other=no` vs loop vs all (current)
+- Try smaller del-max values (650k, 720k) with current full config  
+- `--contraction=250` (trendy uses this)
+- Combination of current best with heuristic.lp init/factor tweaks
+- Run multiple times to get reliable comparison
