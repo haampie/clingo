@@ -7,7 +7,7 @@ $clingo \
     --verbose=3 \
     --stats=2 \
     --configuration=tweety \
-    --opt-strategy=usc \
+    --opt-strategy=usc,2 \
     --heuristic=Domain \
     --quiet=2,0,0 \
     $experiment/concretize.lp \
