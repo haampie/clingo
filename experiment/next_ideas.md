@@ -1,10 +1,24 @@
 # Next ideas
 
-- Try del-max values 650k, 720k with current full config
-- `--lookahead=atom` or `--lookahead=body`
-- `--forget-on-restart` / `--partial-check` / `--usc-core-sched`
-- Heuristic: add `#heuristic` for `attr("node_platform")`, `attr("node_os")`, `attr("compiler_version")` atoms (currently no guidance — see program.md)
-- Heuristic: try `true`/`false` modifiers instead of separate `level` + `sign` (see program.md for semantics)
-- Heuristic: `factor` modifier on version/variant atoms to boost VSIDS re-selection after conflicts
-- Heuristic: conditional body directives — hint version atoms only once the parent `attr("node")` is decided
-- Run multiple times to confirm results within timing variance (~0.1–0.2s)
+- ~~Try del-max values 650k, 720k with current full config~~ (done: 650k slightly better, 600k neutral)
+- ~~`--parallel-mode=2`~~ (done: **improved** ~17.69s, committed)
+- ~~`--parallel-mode=4`~~ (done: worse — 4 threads add overhead)
+- ~~`--parallel-mode=2,split`~~ (done: falls back to compete, same as parallel-mode=2)
+- ~~`--parallel-mode=4,split`~~ (done: falls back to compete, worse)
+- Try `--parallel-mode=3` (untested — sweet spot may be between 2 and 4)
+- ~~`--lookahead=atom` or `--lookahead=body`~~ (done: lookahead=atom,1 much worse)
+- `--partial-check` / `--usc-core-sched`
+- ~~Heuristic: add `#heuristic` for `attr("node_platform")`, `attr("node_os")` atoms~~ (done: improved!)
+- ~~Heuristic: try `true`/`false` modifiers instead of separate `level` + `sign`~~ (done: worse for c/cxx/libc)
+- ~~Heuristic: `factor` modifier on version/variant atoms~~ (done: no improvement)
+- ~~Heuristic: conditional body directives — hint version atoms only once the parent `attr("node")` is decided (try priority @3 for conditional version sign)~~ (done: @3 no improvement)
+- ~~Try `--del-max=680000`, `--del-max=700000` with current config~~ (done: within variance)
+- ~~Heuristic: add `factor` modifier for virtual_node (currently no factor on those atoms)~~ (done: improved!)
+- ~~Heuristic: try lower level for node_platform/node_os e.g. 90~~ (done: no improvement)
+- Try `--counter-restarts=<n>` (counter implication restarts)
+- Try `--update-lbd=less` or `--update-lbd=luby`
+- Heuristic: try `[4, factor]` on `attr("version")` at higher priority on the conditional sign hint
+- Try combining `--del-glue=4,0` with `--del-max=620000` (joint search)
+- Heuristic: try `[2, factor]` on virtual_on_edge (softer than 4)
+- Try `--otfs=1` (partial instead of full on-the-fly subsumption)
+- Try `--deletion=basic,55` (between 50 and 60)

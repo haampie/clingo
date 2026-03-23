@@ -1,7 +1,7 @@
 # Experiment Log
 
-## Current best: ~18.05s (range 17.99-18.15s)
-Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del-max=750000 --trans-ext=no --backprop --nant --sign-def=neg --del-glue=5,0 --otfs=2 --score-res=multiset --heuristic=Domain`
+## Current best: ~17.69s (range 17.67-17.72s)
+Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del-max=650000 --trans-ext=no --backprop --nant --sign-def=neg --del-glue=5,0 --otfs=2 --score-res=multiset --heuristic=Domain --parallel-mode=2`
 
 ## Problem characteristics
 - Total time: ~19.686s baseline
@@ -104,3 +104,45 @@ Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del
 | 112 | `--score-other=no` | 18.332 | +0.28s | worse |
 | 113 | heuristic: add `[120, level]` + `[-1, sign]` for `attr("node_platform")` and `attr("node_os")` | 18.099 | ~ | within variance, reverted |
 | 114 | heuristic: `[4, factor]` on version atoms | (interrupted) | — | retry |
+| 115 | `--restart-on-model` | 18.057 / 18.011 | ~ | within variance, reverted |
+| 116 | `--lookahead=atom,1` | 22.996 | +4.95s | much worse, reverted |
+| 117 | `true` modifier for virtual_node c/cxx/libc — interrupted mid-run | — | — | agent stopped, incomplete |
+| 118 | heuristic: `[4, factor]` on version atoms | 18.118 | ~ | within variance, reverted |
+| 119 | heuristic: `true` modifier `[130, true]` for c/cxx/libc virtual nodes | 18.652 | +0.50s | worse, reverted |
+| 120 | `--contraction=150` (below tweety default 250) | 18.119 | ~ | within variance, reverted |
+| 121 | `--contraction=100` | 18.026 / 18.085 | ~ | within variance on re-run, reverted |
+| 122 | `--del-max=900000` | 18.299 | +0.25s | worse, reverted |
+| 123 | heuristic: add `[120, level]` + `[-1, sign]` for `attr("node_platform")` and `attr("node_os")` | 17.967/18.015/17.987 | -0.06s ✓ | **committed** new best ~17.99s, solving time 3.37s (was 3.48s) |
+| 124 | `--dom-mod=false,show` | 17.988 | ~ | within variance, reverted |
+| 125 | `--restarts=no` (solver has 0 restarts anyway) | 18.166 | +0.18s | worse, reverted |
+| 126 | `--forget-on-restart=0` | error | — | unknown option, reverted |
+| 127 | `--update-act` (LBD-based activity bumping) | 18.003 | ~ | within variance, reverted |
+| 128 | `--vsids-progress=94,2` (slightly higher decay than tweety's 92,2) | 18.026 | ~ | within variance, reverted |
+| 129 | `--opt-usc-shrink=bin` | 21.341 | +3.35s | much worse (solving 6.71s vs 3.37s), reverted |
+| 130 | heuristic: add conditional `[1@2, sign]` hints for allowed_platform and os(OS,0) | 18.164 | +0.17s | worse, reverted |
+| 131 | `--block-restarts=100` (glucose-style blocking) | 18.079 | ~ | within variance, reverted |
+| 132 | heuristic: add `[600, init]` for node_platform and node_os | 18.452 | +0.46s | worse (Unsat 0.26s vs 0.01s), reverted |
+| 133 | `--del-glue=5,1` (keep 1 recent learnt per level) | 18.028 | ~ | within variance, reverted |
+| 134 | `--del-max=650000` | 17.964/18.000/17.997 | -0.01s ✓ | **committed** new best ~17.99s, solving 3.35s |
+| 135 | `--del-max=600000` | 18.012 | ~ | within variance, reverted |
+| 136 | heuristic: lower node_platform/node_os level to 90 (from 120) | 17.991 | ~ | within variance, reverted |
+| 137 | heuristic: `[4, factor]` on virtual_node atoms | 17.913/17.918 | -0.07s ✓ | **committed** new best ~17.92s |
+| 138 | heuristic: raise virtual_node factor to `[8, factor]` | 17.936 | ~ | within variance, reverted |
+| 139 | heuristic: `[4, factor]` on variant_value atoms | 17.923 | ~ | within variance, reverted |
+| 140 | `--del-max=680000` | 18.015 | ~ | within variance, reverted |
+| 141 | `--del-max=620000` | 17.980 | ~ | within variance, reverted |
+| 142 | heuristic: version sign priority `@3` (was `@2`) | 18.018 | ~ | within variance, reverted |
+| 143 | heuristic: `[4, factor]` on virtual_on_edge atoms | 17.869/17.823 | -0.07s ✓ | **committed** new best ~17.85s, solving 3.24s (was 3.35s) |
+| 144 | heuristic: raise virtual_on_edge factor to `[8, factor]` | 17.915 | +0.07s | slightly worse, reverted |
+| 145 | heuristic: `[4, factor]` on node_target atoms | 17.833/17.832 | ~ | within variance, reverted |
+| 146 | heuristic: `[4, factor]` on version atoms (retried with new state) | 17.884 | +0.03s | slightly worse, reverted |
+| 147 | `--del-max=550000` | 17.865 | ~ | within variance, reverted |
+| 148 | heuristic: raise all `[120, level]` → `[130, level]` | 17.891 | +0.04s | slightly worse, reverted |
+| 149 | `--del-glue=4,0` (retried with new config) | 17.872 | ~ | within variance, reverted |
+| 150 | heuristic: raise node factor from `[4, factor]` to `[6, factor]` | 17.880 | ~ | within variance, reverted |
+| 151 | heuristic: `[800, init]` on virtual_on_edge | 21.247 | +3.40s | catastrophically worse (1st model 4.30s), reverted |
+| 152 | heuristic: `[-1, sign]` on virtual_on_edge | 17.883 | ~ | within variance, reverted |
+| 153 | `--parallel-mode=2` | 17.715/17.669 | -0.16s ✓ | **committed** new best ~17.69s, solving 3.10s (was 3.24s) |
+| 154 | `--parallel-mode=4` | 18.092 | +0.40s | worse — more threads hurt, overhead increases |
+| 155 | `--parallel-mode=2,split` | 17.712 | ~ | within variance; warns "Selected strategies imply Mode=compete" — same as parallel-mode=2, reverted |
+| 156 | `--parallel-mode=4,split` | 18.166 | +0.48s | worse; also falls back to compete mode, reverted |
