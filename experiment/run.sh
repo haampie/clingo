@@ -12,6 +12,7 @@ $clingo \
     --del-max=750000 \
     --trans-ext=no \
     --backprop \
+    --nant \
     --del-glue=5,0 \
     --otfs=2 \
     --heuristic=Domain \
