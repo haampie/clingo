@@ -9,6 +9,7 @@ $clingo \
     --configuration=tweety \
     --opt-strategy=usc,2 \
     --opt-heuristic=model \
+    --del-max=1000000 \
     --heuristic=Domain \
     --quiet=2,0,0 \
     $experiment/concretize.lp \
