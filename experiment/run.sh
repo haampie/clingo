@@ -3,7 +3,7 @@
 clingo=/home/harmen/spack/opt/spack/linux-zen2/clingo-spack-we53geyqxj4uk4ay2bz4pqoiduzqixvu/bin/clingo
 experiment=/home/harmen/projects/potassco/clingo/experiment
 
-$clingo \
+timeout 23 $clingo \
     --verbose=3 \
     --stats=2 \
     --configuration=tweety \
