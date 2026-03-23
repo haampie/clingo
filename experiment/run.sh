@@ -17,7 +17,6 @@ $clingo \
     --sign-def=neg \
     --del-glue=5,0 \
     --otfs=2 \
-    --lookahead=atom \
     --heuristic=Domain \
     --quiet=2,0,0 \
     $experiment/concretize.lp \

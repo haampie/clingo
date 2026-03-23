@@ -28,7 +28,6 @@
 #heuristic attr("node", node(0, Dependency)) : attr("dependency_holds", ParentNode, Dependency, Type), not virtual(Dependency). [1@2, sign]
 
 #heuristic attr("version", node(PackageID, Package), Version). [30, init]
-#heuristic attr("version", node(PackageID, Package), Version). [4, factor]
 #heuristic attr("version", node(PackageID, Package), Version). [-1, sign]
 #heuristic attr("version", node(PackageID, Package), Version) : pkg_fact(Package, version_declared(Version, 0)), attr("node", node(PackageID, Package)). [ 1@2, sign]
 
