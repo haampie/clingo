@@ -9,7 +9,7 @@ timeout 23 $clingo \
     --configuration=tweety \
     --opt-strategy=usc,2 \
     --opt-heuristic=model \
-    --del-max=750000 \
+    --del-max=650000 \
     --trans-ext=no \
     --backprop \
     --nant \
