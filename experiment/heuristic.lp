@@ -31,6 +31,12 @@
 #heuristic attr("version", node(PackageID, Package), Version). [-1, sign]
 #heuristic attr("version", node(PackageID, Package), Version) : pkg_fact(Package, version_declared(Version, 0)), attr("node", node(PackageID, Package)). [ 1@2, sign]
 
+% Prefer negative sign for node_platform and node_os (default value is typically correct)
+#heuristic attr("node_platform", node(PackageID, Package), Platform). [120, level]
+#heuristic attr("node_platform", node(PackageID, Package), Platform). [-1, sign]
+#heuristic attr("node_os", node(PackageID, Package), OS). [120, level]
+#heuristic attr("node_os", node(PackageID, Package), OS). [-1, sign]
+
 % Use default targets
 #heuristic attr("node_target", node(PackageID, Package), Target). [-1, sign]
 #heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, 0), attr("node", node(PackageID, Package)). [1@2, sign]
