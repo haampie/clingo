@@ -18,6 +18,7 @@ timeout 23 $clingo \
     --del-glue=5,0 \
     --otfs=2 \
     --heuristic=Domain \
+    --parallel-mode=2 \
     --quiet=2,0,0 \
     $experiment/concretize.lp \
     $experiment/direct_dependency.lp \
