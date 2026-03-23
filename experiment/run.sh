@@ -8,6 +8,7 @@ $clingo \
     --stats=2 \
     --configuration=tweety \
     --opt-strategy=usc,2 \
+    --opt-heuristic=model \
     --heuristic=Domain \
     --quiet=2,0,0 \
     $experiment/concretize.lp \
