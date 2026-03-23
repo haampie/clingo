@@ -16,6 +16,7 @@
 #heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [120, level]
 
 #heuristic attr("virtual_node", node(X, Virtual)). [800, init]
+#heuristic attr("virtual_node", node(X, Virtual)). [4, factor]
 #heuristic attr("virtual_node", node(X, Virtual)). [-1, sign]
 #heuristic attr("virtual_node", node(0, Virtual)) : node_depends_on_virtual(PackageNode, Virtual). [1@2, sign]
 #heuristic attr("virtual_node", node(0, "c")).     [1@3, sign]
