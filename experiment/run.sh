@@ -9,7 +9,7 @@ $clingo \
     --configuration=tweety \
     --opt-strategy=usc,2 \
     --opt-heuristic=model \
-    --del-max=700000 \
+    --del-max=750000 \
     --trans-ext=no \
     --backprop \
     --nant \
