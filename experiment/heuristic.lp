@@ -8,12 +8,12 @@
 
 % Decide about DAG atoms, before trying to guess facts used only in
 % the internal representation
-#heuristic attr("virtual_node", node(X, Virtual)). [80, level]
-#heuristic attr("node", PackageNode). [80, level]
-#heuristic attr("version", node(PackageID, Package), Version). [80, level]
-#heuristic attr("variant_value", PackageNode, Variant, Value). [80, level]
-#heuristic attr("node_target", node(PackageID, Package), Target). [80, level]
-#heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [80, level]
+#heuristic attr("virtual_node", node(X, Virtual)). [120, level]
+#heuristic attr("node", PackageNode). [120, level]
+#heuristic attr("version", node(PackageID, Package), Version). [120, level]
+#heuristic attr("variant_value", PackageNode, Variant, Value). [120, level]
+#heuristic attr("node_target", node(PackageID, Package), Target). [120, level]
+#heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [120, level]
 
 #heuristic attr("virtual_node", node(X, Virtual)). [600, init]
 #heuristic attr("virtual_node", node(X, Virtual)). [-1, sign]
