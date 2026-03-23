@@ -10,6 +10,7 @@ $clingo \
     --opt-strategy=usc,2 \
     --opt-heuristic=model \
     --del-max=1000000 \
+    --del-glue=2,0 \
     --heuristic=Domain \
     --quiet=2,0,0 \
     $experiment/concretize.lp \
