@@ -13,7 +13,6 @@ Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del
 - Variables: 1,276,720 | Constraints: 5,089,256
 - Tight: No (SCCs: 7598)
 
----
 
 ## Log table
 
@@ -37,26 +36,6 @@ Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del
 | 44 | `--del-glue=3,0` (retry) | 20.067 | +1.09s | worse |
 | 45 | `--del-glue=2,0` | 18.936 | -0.04s ✓ | **committed** |
 | 46 | `--del-glue=4,0` | 18.633 | -0.31s ✓ | **committed** new best 18.63s |
-
----
-
-## Next ideas
-
-- `--del-glue=5,0` (continue exploring higher glue thresholds)
-- `--del-glue=6,0`
-- `--strengthen=recursive` or `--strengthen=no`
-- `--otfs=2` (on-the-fly subsumption level)
-- `--save-progress` variants
-- `--lookahead=atom` or `--lookahead=body`
-- Heuristic level weights: raise `[80, level]` to 120 or 160 for node/version atoms
-- Heuristic init values: raise `[300, init]` → 500 or lower → 150 for attr("node")
-- Heuristic factor: try `[8, factor]` or `[2, factor]` instead of `[4, factor]`
-- Add `#heuristic` directives for `attr("node_platform")` or `attr("compiler")` atoms
-- `--del-max=500000` (even more aggressive deletion)
-- `--contraction` settings
-- `--forget-on-restart`
-- `--partial-check` options
-- `--usc-core-sched` options
 | 47 | `--del-glue=5,0` | 18.602 | -0.03s ✓ | **committed** new best 18.60s |
 | 48 | `--del-glue=6,0` | 18.631 | +0.03s | worse than 5,0 — 5,0 is sweet spot |
 | 49 | `--strengthen=recursive` | 18.621 | +0.02s | marginal loss |
@@ -113,20 +92,15 @@ Config: `--configuration=tweety --opt-strategy=usc,2 --opt-heuristic=model --del
 | 100 | `--sign-fix` (fix signs to neg) | 18.434 | +0.19s | worse |
 | 101 | `--reverse-arcs=2` | 18.366 | +0.12s | worse |
 | 102 | `--strengthen=local` | 18.418 | +0.17s | worse |
-| 103 | `--del-max=700000` | 18.337 | -0.08s... wait wrong direction | **committed** — actually 18.337 < 18.245?... re-check |
 | 103 | `--del-max=700000` | 18.337 | — | within timing variance of 750k, reverted bad commit |
-| 104 | `--del-cfl=no` (disable conflict-based deletion) | 18.333-18.379 | ~ | within timing variance (~18.2-18.4s for baseline too) |
+| 104 | `--del-cfl=no` (disable conflict-based deletion) | 18.333-18.379 | ~ | within timing variance |
 | 105 | `--del-cfl=+,1000,50,10` | 18.364 | ~ | within timing variance |
 | 106 | `--vsids-acids` (ACIDS scheme) | 19.465 | +1.23s | much worse |
 | 107 | `--score-res=set` | 18.347 | ~ | within timing variance |
 | 108 | `--score-res=multiset` | 18.141-18.146 | -0.10s ✓ | **committed** new best ~18.14s — solving time dropped 3.72→3.48s |
 | 109 | `--score-res=min` | 18.313 | +0.17s | worse than multiset |
-| 110 | `--score-other=loop` | 18.016-18.140 | ~ | within variance (committed baseline also 17.99-18.08s now with score-res=multiset) |
-
-## Next ideas (remaining)
-
-- `--score-other=no` vs loop vs all (current)
-- Try smaller del-max values (650k, 720k) with current full config  
-- `--contraction=250` (trendy uses this)
-- Combination of current best with heuristic.lp init/factor tweaks
-- Run multiple times to get reliable comparison
+| 110 | `--score-other=loop` | 18.016-18.140 | ~ | within variance (baseline also 17.99-18.08s with score-res=multiset) |
+| 111 | `--contraction=250` | 18.236 | +0.19s | worse |
+| 112 | `--score-other=no` | 18.332 | +0.28s | worse |
+| 113 | heuristic: add `[120, level]` + `[-1, sign]` for `attr("node_platform")` and `attr("node_os")` | 18.099 | ~ | within variance, reverted |
+| 114 | heuristic: `[4, factor]` on version atoms | (interrupted) | — | retry |
