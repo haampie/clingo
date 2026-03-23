@@ -13,6 +13,7 @@ $clingo \
     --trans-ext=no \
     --backprop \
     --nant \
+    --score-res=multiset \
     --sign-def=neg \
     --del-glue=5,0 \
     --otfs=2 \
