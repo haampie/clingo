@@ -25,3 +25,10 @@ _skbuild/
 dist
 *.egg-info/
 MANIFEST
+
+spack.yaml
+spack.lock
+reports
+.spack*
+profile_output.txt
+build-*
