@@ -25,6 +25,7 @@
 #include <gringo/symbol.hh>
 #include <gringo/hash_set.hh>
 #include <mutex>
+#include <cstdlib>
 #ifdef _MSC_VER
 #pragma warning (disable : 4200) // nonstandard extension used: zero-sized array in struct/union
 #endif
@@ -32,6 +33,41 @@
 namespace Gringo {
 
 namespace {
+
+// Bump allocator for interned objects that are never individually freed.
+class Arena {
+    static constexpr size_t BlockSize = 65536;
+    struct Block {
+        Block *next;
+        alignas(std::max_align_t) char data[];
+    };
+    Block *head_ = nullptr;
+    size_t offset_ = BlockSize; // force alloc on first use
+public:
+    void *allocate(size_t size, size_t align) {
+        // round up offset to alignment
+        offset_ = (offset_ + align - 1) & ~(align - 1);
+        if (offset_ + size > BlockSize) {
+            // For oversized allocations, give them their own block
+            size_t blockSize = sizeof(Block) + (size > BlockSize ? size : BlockSize);
+            auto *b = static_cast<Block*>(std::malloc(blockSize));
+            b->next = head_;
+            head_ = b;
+            offset_ = 0;
+        }
+        void *p = head_->data + offset_;
+        offset_ += size;
+        return p;
+    }
+    ~Arena() {
+        while (head_) {
+            auto *b = head_;
+            head_ = head_->next;
+            std::free(b);
+        }
+    }
+};
+static Arena arena;
 
 // {{{1 auxiliary functions
 
@@ -146,17 +182,18 @@ struct MString {
     static bool equal(char const &a, char const &b) { return std::strcmp(&a, &b) == 0; }
     static bool equal(char const &a, StringSpan b) { return std::strncmp(&a, b.first, b.size) == 0 && (&a)[b.size] == '\0'; }
     static char *construct(char const &str) {
-        std::unique_ptr<char[]> buf{new char[std::strlen(&str) + 1]};
-        std::strcpy(buf.get(), &str);
-        return buf.release();
+        auto len = std::strlen(&str);
+        auto *buf = static_cast<char*>(arena.allocate(len + 1, 8));
+        std::memcpy(buf, &str, len + 1);
+        return buf;
     }
     static char *construct(StringSpan str) {
-        std::unique_ptr<char[]> buf{new char[str.size + 1]};
-        std::memcpy(buf.get(), str.first, sizeof(char) * str.size);
+        auto *buf = static_cast<char*>(arena.allocate(str.size + 1, 8));
+        std::memcpy(buf, str.first, str.size);
         buf[str.size] = '\0';
-        return buf.release();
+        return buf;
     }
-    static void destroy(char *str) { delete [] str; }
+    static void destroy(char *) { }
 };
 
 using UString = Unique<MString>;
@@ -167,8 +204,11 @@ struct MSig {
     using Type = std::pair<String, uint32_t>;
     static size_t hash(Type const &sig) { return get_value_hash(sig); }
     static bool equal(Type const &a, Type const &b) { return a == b; }
-    static Type *construct(Type const &sig) { return gringo_make_unique<Type>(sig).release(); }
-    static void destroy(Type *sig) { delete sig; }
+    static Type *construct(Type const &sig) {
+        auto *mem = arena.allocate(sizeof(Type), alignof(Type));
+        return new(mem) Type(sig);
+    }
+    static void destroy(Type *) { }
 };
 using USig = Unique<MSig>;
 uint64_t encodeSig(String name, uint32_t arity, bool sign) {
@@ -188,7 +228,7 @@ public:
         return {args_, sig().arity()};
     }
     static Fun *make(Sig sig, SymSpan args) {
-        auto *mem = ::operator new(sizeof(Fun) + args.size * sizeof(Symbol));
+        auto *mem = arena.allocate(sizeof(Fun) + args.size * sizeof(Symbol), alignof(Fun));
         return new(mem) Fun(sig, args);
     }
     bool equal(Sig sig, SymSpan args) const {
@@ -199,7 +239,6 @@ public:
     }
     void destroy() noexcept {
         this->~Fun();
-        ::operator delete(this);
     }
 private:
     ~Fun() noexcept = default;
