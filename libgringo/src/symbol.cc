@@ -117,7 +117,7 @@ public:
         return set_.insert(Hash(), EqualTo(), std::forward<U>(x)).first.ptr_;
     }
 private:
-    using Set = HashSet<Unique, Literals>;
+    using Set = HashSet<Unique, Literals, /*Optimized=*/true>;
     static Set set_;
     static std::mutex mutex_;
     static Type const *deleted_;

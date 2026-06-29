@@ -54,12 +54,16 @@ constexpr Value HashSetLiterals<Value>::deleted;
 template <typename Value>
 constexpr Value HashSetLiterals<Value>::open;
 
-template <typename Value, typename Literals = HashSetLiterals<Value>>
+// With Optimized a power-of-two table is used and a parallel array stores each slot's mixed
+// hash, checked before equalTo to avoid a heap dereference per probe (matters for the symbol
+// intern tables). Optimized == false keeps the original behavior.
+template <typename Value, typename Literals = HashSetLiterals<Value>, bool Optimized = false>
 class HashSet {
 public:
     using ValueType = Value;
     using SizeType = uint32_t;
     using TableType = std::unique_ptr<ValueType[]>;
+    using HashType = std::unique_ptr<SizeType[]>;
 
     // at least n value can be inserted without reallocation
     // and the container is larger by a constant factor c > 1 than c*r
@@ -68,6 +72,7 @@ public:
             reserved_ = grow_(n, r);
             table_.reset(new ValueType[reserved_]);
             std::fill(table_.get(), table_.get() + reserved_, Literals::open);
+            if (Optimized) { hashes_.reset(new SizeType[reserved_]); }
         }
     }
 #ifdef GRINGO_PROBE_LINEAR
@@ -84,12 +89,19 @@ public:
     }
     void swap(HashSet &other) {
         std::swap(table_, other.table_);
+        std::swap(hashes_, other.hashes_);
         std::swap(reserved_, other.reserved_);
         std::swap(size_, other.size_);
     }
     SizeType reserved() const { return reserved_; }
     SizeType maxSize() const { return maxPrime<SizeType>(); }
     bool reserveNeedsRebuild(SizeType n) const {
+        if (Optimized) {
+            // honor the load factor so the table always keeps an open slot to terminate a probe
+            if (reserved_ == 0) { return n > 0; }
+            double load = double(n) / reserved_;
+            return (load > loadMax() && reserved_ < maxSize()) || n > maxSize();
+        }
         if (n <= 11) { return n > reserved(); }
         else {
             double load = double(n) / reserved_;
@@ -104,15 +116,31 @@ public:
             assert(rOld < rNew);
             if (table_) {
                 TableType table(new ValueType[rNew]);
+                HashType hashes;
+                if (Optimized) { hashes.reset(new SizeType[rNew]); }
                 reserved_ = rNew;
                 std::fill(table.get(), table.get() + reserved_, Literals::open);
                 std::swap(table, table_);
-                for (auto it = table.get(), ie = table.get() + rOld; it != ie; ++it) {
-                    if (!(*it == Literals::open) && !(*it == Literals::deleted)) { insert_(hasher, equalTo, std::move(*it)); }
+                std::swap(hashes, hashes_);
+                for (SizeType j = 0; j < rOld; ++j) {
+                    ValueType &slot = table[j];
+                    if (!(slot == Literals::open) && !(slot == Literals::deleted)) {
+                        if (Optimized) {
+                            // reposition by the stored hash, without hasher/equalTo on the values
+                            SizeType h = hashes[j];
+                            SizeType mask = reserved_ - 1;
+                            SizeType i = h & mask;
+                            while (!(table_[i] == Literals::open)) { i = (i + 1) & mask; }
+                            table_[i] = std::move(slot);
+                            hashes_[i] = h;
+                        }
+                        else { insert_(hasher, equalTo, std::move(slot)); }
+                    }
                 }
             }
             else {
                 table_.reset(new ValueType[rNew]);
+                if (Optimized) { hashes_.reset(new SizeType[rNew]); }
                 reserved_ = rNew;
                 std::fill(table_.get(), table_.get() + reserved_, Literals::open);
             }
@@ -152,6 +180,14 @@ public:
 private:
     SizeType grow_(SizeType n, SizeType r) {
         if (n > maxSize()) { throw std::overflow_error("container size exceeded"); }
+        if (Optimized) {
+            // smallest power of two that keeps the load below loadMax (at least doubling)
+            double need = std::max(n / loadMax() + 1.0, r * 2.0);
+            SizeType cap = 4;
+            SizeType const top = static_cast<SizeType>(1) << 31;
+            while (cap < need && cap < top) { cap <<= 1; }
+            return cap;
+        }
         if (n > 11) { n = std::min(static_cast<SizeType>(std::max(n / loadMax() + 1.0, r * 2.0)), maxSize()); }
         return n < 4 ? n : nextPrime(n);
     }
@@ -163,6 +199,9 @@ private:
     }
     template <typename Hasher, typename EqualTo, typename... Args>
     std::pair<ValueType*, bool> find_(Hasher const &hasher, EqualTo const &equalTo, Args&&... val) {
+        if (Optimized) {
+            return findHashed_(static_cast<SizeType>(hash_mix(hasher(val...))), equalTo, val...);
+        }
         ValueType *first = nullptr;
         for (SizeType pos = hash_(hasher, val...), end = reserved();;) {
             for (SizeType i = pos; i < end; ++i) {
@@ -198,6 +237,9 @@ private:
     }
     template <typename Hasher, typename EqualTo, typename... Args>
     std::pair<ValueType*, bool> find_(Hasher const &hasher, EqualTo const &equalTo, Args&&... val) {
+        if (Optimized) {
+            return findHashed_(static_cast<SizeType>(hash_mix(hasher(val...))), equalTo, val...);
+        }
         ValueType *first = nullptr;
         auto h = hash_(hasher, val...);
         for (SizeType i = 0, e = reserved(); i < e; ++i, h.first = (h.first + h.second) % e) {
@@ -216,9 +258,46 @@ private:
         return {first, false};
     }
 #endif
+    // Linear probing on a power-of-two table, with a hash pre-check before equalTo.
+    template <typename EqualTo, typename... Args>
+    std::pair<ValueType*, bool> findHashed_(SizeType h, EqualTo const &equalTo, Args const&... val) {
+        ValueType *first = nullptr;
+        SizeType mask = reserved_ - 1;
+        for (SizeType pos = h & mask, end = reserved();;) {
+            for (SizeType i = pos; i < end; ++i) {
+                if (table_[i] == Literals::open) {
+                    if (!first) { first = &table_[i]; }
+                    return {first, false};
+                }
+                else if (table_[i] == Literals::deleted) {
+                    if (!first) { first = &table_[i]; }
+                    continue;
+                }
+                else if (hashes_[i] == h && equalTo(table_[i], val...)) {
+                    return {&table_[i], true};
+                }
+            }
+            if (pos > 0) {
+                end = pos;
+                pos = 0;
+            }
+            else { break; }
+        }
+        return {first, false};
+    }
     template <typename Hasher, typename EqualTo, typename T>
     std::pair<ValueType&, bool> insert_(Hasher const &hasher, EqualTo const &equalTo, T &&val) {
         assert(size() < reserved());
+        if (Optimized) {
+            SizeType h = static_cast<SizeType>(hash_mix(hasher(val)));
+            auto ret = findHashed_(h, equalTo, val);
+            if (!ret.second) {
+                assert(ret.first);
+                hashes_[static_cast<SizeType>(ret.first - table_.get())] = h;
+                *ret.first = std::forward<T>(val);
+            }
+            return {*ret.first, !ret.second};
+        }
         auto ret = find_(hasher, equalTo, val);
         if (!ret.second) {
             assert(ret.first);
@@ -230,6 +309,7 @@ private:
     SizeType size_;
     SizeType reserved_;
     TableType table_;
+    HashType hashes_; // per-slot hash, allocated only when Optimized
 };
 
 struct CallHash {
